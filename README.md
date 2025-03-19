@@ -1,6 +1,7 @@
 # Chatbot
-Chat bot with multiple models, multiple-modes, multi-modal, context management, RAG, Caching. 
 Architecture Link: https://www.figma.com/design/z3aN66C4rR3CpOSgkXsBAK/chatbot-arch?node-id=0-1&p=f&t=OnEVYUoE6kzxqm2J-0
+
+Chat bot with multiple models, multiple-modes, multi-modal, context management, RAG, Caching. 
 
 ## Key Features:
 1. Includes multiple model support.
