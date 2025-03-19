@@ -129,7 +129,7 @@ def best_quality(prompt, model_name):
         ##Knowledge base:
         {doc_text}
         '''
-    return prompt
+    return [prompt, reasoning]
 
 
 def voice_processing(voice_data):
