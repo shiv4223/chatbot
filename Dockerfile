@@ -1,25 +1,20 @@
-# Use an official lightweight Python image
+# Use the official lightweight Python image
 FROM python:3.10-slim
 
-# Set environment variables
-ENV PYTHONUNBUFFERED=1
-
 # Set the working directory in the container
-WORKDIR /app
+WORKDIR /
 
-# Install necessary system dependencies
-RUN apt-get update && apt-get install -y python3-venv
+# Copy the requirements file into the container
+COPY requirements.txt .
 
-# Copy the current directory contents into the container
-COPY . /app/
+# Install the dependencies
+RUN pip install --no-cache-dir -r requirements.txt
 
-# Create a virtual environment and install dependencies
-RUN python3 -m venv /opt/venv && \
-    . /opt/venv/bin/activate && \
-    pip install --no-cache-dir -r requirements.txt
+# Copy the rest of the application code into the container
+COPY . .
 
-# Expose port 5000 for Flask
+# Expose the port the Flask app runs on
 EXPOSE 5000
 
-# Command to run the Flask app
-CMD ["/opt/venv/bin/python", "app.py"]
+# Define the command to run the application
+CMD ["python", "app.py"]
