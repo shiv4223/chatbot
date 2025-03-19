@@ -413,7 +413,7 @@ code.inline {
             <option value="da">Danish</option>
             <option value="de">German</option>
             <option value="el">Greek</option>
-            <option value="en" selected>English</option>
+            <option value="en"selected>English</option>
             <option value="es">Spanish</option>
             <option value="et">Estonian</option>
             <option value="fa">Persian</option>
@@ -1095,6 +1095,9 @@ function createReasoningSection(reasoningText) {
 
   imageInput.value = "";
 
+  const sourceLangSelect = document.getElementById("lang1-select");
+  const targetLangSelect = document.getElementById("lang2-select");
+
   // Prepare JSON payload
   const payload = {
     user_id: userId,
@@ -1104,7 +1107,10 @@ function createReasoningSection(reasoningText) {
     model: selectedModel,
     mode: selectedMode,
     image: imageData,
-    voice: voiceData
+    voice: voiceData,
+    source_lang: sourceLangSelect?.value || "en",  // Fallback to "en" if null
+    target_lang: targetLangSelect?.value || "hi"   // Fallback to "hi" if null
+
   };
 
   try {
