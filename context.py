@@ -1,14 +1,12 @@
-import numpy as np
-import json
-import spacy
-from sklearn.cluster import KMeans
-from keybert import KeyBERT
-from datetime import datetime, timedelta
-from collections import deque
 import requests
+import numpy as np
 import os
+from datetime import datetime
 from llm_inferences import query_llama_3_2_1b
-from dateutil import parser
+import json
+
+# Endpoints and API keys
+
 
 def get_embedding(text):
     hf_api_key = os.getenv('HUGGINGFACE_API_KEY')
@@ -30,12 +28,45 @@ def get_embedding(text):
         embedding = embedding_data
     return embedding
 
-# Load NLP model for NER and keywords
-nlp = spacy.load("en_core_web_sm")
-kw_model = KeyBERT()
+# import os
+# import requests
 
-# Cache for precomputed summaries
-context_cache = deque(maxlen=5)  # Stores last 5 precomputed summaries
+# def get_embedding(text):
+#     # Get API key from environment variables
+#     segmind_api_key = "SG_56223ff5b3948309"
+
+#     if not segmind_api_key:
+#         raise Exception("SEGMIND_API_KEY is not set in environment variables.")
+
+#     # API endpoint
+#     model = "text-embedding-3-small"
+#     endpoint = f"https://api.segmind.com/v1/{model}"
+
+#     # API headers
+#     headers = {
+#         "x-api-key": segmind_api_key,
+#         "Content-Type": "application/json"
+#     }
+
+#     # Request payload
+#     payload = {"inputs": text}
+
+#     response = requests.post(endpoint, headers=headers, json=payload)
+
+#     if response.status_code != 200:
+#         raise Exception("Embedding API error: " + response.text)
+
+#     embedding_data = response.json()
+
+#     # Ensure response is a valid embedding
+#     if isinstance(embedding_data, dict) and "embedding" in embedding_data:
+#         embedding = embedding_data["embedding"]
+#     else:
+#         raise Exception("Unexpected response format from Segmind API")
+
+#     return embedding
+
+
 
 def cosine_similarity(vec1, vec2):
     v1 = np.array(vec1)
@@ -44,167 +75,103 @@ def cosine_similarity(vec1, vec2):
         return 0.0
     return float(np.dot(v1, v2) / (np.linalg.norm(v1) * np.linalg.norm(v2)))
 
-# Adaptive Similarity Threshold
-class AdaptiveThreshold:
-    def __init__(self, initial_threshold=0.3, alpha=0.05):
-        self.threshold = initial_threshold
-        self.alpha = alpha
 
-    def update(self, success):
-        if success:
-            self.threshold = min(0.9, self.threshold + self.alpha)
-        else:
-            self.threshold = max(0.3, self.threshold - self.alpha)
-
-adaptive_threshold = AdaptiveThreshold()
-
-# Keyword & NER Extraction
-def extract_keywords_and_entities(text):
-    doc = nlp(text)
-    keywords = kw_model.extract_keywords(text, keyphrase_ngram_range=(1, 2), stop_words='english', top_n=3)
-    entities = [ent.text.lower() for ent in doc.ents if ent.label_ in {"ORG", "GPE", "PERSON", "PRODUCT"}]
-    return set([kw[0] for kw in keywords] + entities)
-
-# Embedding Clustering for Efficient History Retrieval
-def cluster_history_embeddings(history, current_embedding, num_clusters=3):
-    if len(history) < num_clusters:
-        return history  # Not enough data to cluster
-
-    embeddings = []
-    for msg in history:
-        emb = json.loads(msg["embeddings"])["data"]
-        if emb:
-            embeddings.append(emb)
-        
-    if len(embeddings) == 0:
-        return []
-    kmeans = KMeans(n_clusters=num_clusters, random_state=42, n_init=10)
-    labels = kmeans.fit_predict(embeddings)
-
-    # Find cluster closest to current_embedding
-    current_cluster = kmeans.predict([current_embedding])[0]
-
-    return [msg for i, msg in enumerate(history) if labels[i] == current_cluster]
-
-#Select Relevant History
-def select_relevant_history(history, message, current_embedding, max_tokens=500):
-    now = datetime.now()
+def select_relevant_history(history, current_embedding, threshold = 0.5, max_tokens=500):
     scored_messages = []
-    
-    # Cluster history to improve selection efficiency
-    clustered_history = cluster_history_embeddings(history, current_embedding)
-    if len(clustered_history) == 0:
-        return []
-    current_keywords = extract_keywords_and_entities(message)
-    for msg in clustered_history:
+    now = datetime.now()
+    for msg in history:
+        # Compute semantic similarity for the message
         try:
-            hist_embedding = json.loads(msg["embeddings"])["data"]
+
+            hist_embedding = msg["embeddings"]
+            hist_embedding = json.loads(hist_embedding)
+            hist_embedding = hist_embedding["data"]
             sim = cosine_similarity(current_embedding, hist_embedding)
-        except:
+        except Exception as e:
+            print("Error computing history embedding:", e)
             sim = 0.0
 
-        # Compute recency factor
-        created_at = msg.get('created_at', now.isoformat())
+        # Compute recency factor using the created_at timestamp
+        created_at = msg.get('created_at')
         try:
-            dt = parser.parse(created_at)  # More flexible parsing
+            dt = datetime.fromisoformat(created_at)
         except Exception as e:
-            print(f"Error parsing timestamp: {created_at}, defaulting to now. Error: {e}")
-            dt = datetime.now()
+            dt = now
+
         delta_minutes = (now - dt).total_seconds() / 60.0
-        # recency_factor = np.exp(-delta_minutes / 20)  # Exponential Decay
         recency_factor = 1 / (1 + delta_minutes / 10)
-
-        # Compute keyword & entity overlap
-        user_keywords = extract_keywords_and_entities(msg["message"])
-        response_keywords = extract_keywords_and_entities(msg["response"])
-        keyword_match = len(current_keywords & user_keywords)
-        keyword_match += len(current_keywords & response_keywords)
-
-        # Final scoring function
-        score = sim + (0.3 * keyword_match) + 0.6 * recency_factor
+        score = sim * recency_factor
         scored_messages.append((score, msg))
+    
 
-    # Sort by score and apply adaptive threshold
     scored_messages.sort(key=lambda x: x[0], reverse=True)
-    threshold = adaptive_threshold.threshold
-    print(threshold)
+    
+    # Select messages until reaching max_tokens
     selected = []
     token_count = 0
-
     for score, msg in scored_messages:
-        print(score)
+        ## Come back here to check
+        print(score, msg["message"])
         if score < threshold:
-            selected.append(msg)
             break
         tokens = len(msg['message'].split()) + len(msg['response'].split())
-        if token_count + tokens > max_tokens:
+        if token_count + tokens > max_tokens + 30:
             break
         selected.append(msg)
         token_count += tokens
-
     return selected
 
-# Hybrid Summarization
+
 def summarize_history(messages, message):
     if not messages:
         return ""
-
-    # Extractive Summary
-    extractive_summary = ""
+    text = ""
     for msg in messages:
-        extractive_summary += f"User: {msg['message']}\nAssistant: {msg['response']}\n"
+        text += f"User: {msg['message']}\nAssistant: {msg['response']}\n"
+    summary_prompt = f'''You are a summarizer. You need to summarize the conversation following the instructions.
+    ##Text to Summarize: 
+    {text}
 
-    # Abstractive Summary Prompt
-    summary_prompt = f'''You are a summarizer. Summarize the given conversation to retain key context for the message below.
-    ## Conversation:
-    {extractive_summary}
-
-    ## Current User Message:
+    ##Message: 
     {message}
 
-    ## Instructions:
-    Generate a concise summary relevant to the new message while keeping important past details.
+    ##Instructions: 
+    Generate the summary for text given under Text to Summarize such that it would be helpful for generating next response for the message given under Message. 
+    Also make sure to generate the summary relevant to our message. 
     '''
 
-    # Query LLM
-    abstractive_summary = query_llama_3_2_1b(summary_prompt)
+    summary_response = query_llama_3_2_1b(summary_prompt)
+    return summary_response
 
-    return abstractive_summary.strip()
 
-#Build Context with Precomputed Cache
 def build_summary_context(history, message, recent_count=3, token_limit=500):
-    # Check cache first
-    for cache_entry in context_cache:
-        if cache_entry["message"] == message:
-            return cache_entry["context"]
-
     if len(history) <= recent_count:
-        prompt_context = "## Conversation history:\n"
+        prompt_context = "##Conversation history:\n"
         for entry in history:
             prompt_context += f"User: {entry['message']}\nAssistant: {entry['response']}\n"
         return prompt_context
 
+    # Split history into older messages and recent messages
     older_messages = history[:-recent_count]
     recent_messages = history[-recent_count:]
-
-    # Summarize older messages
+    
+    # Get summary of older messages
     summary = summarize_history(older_messages, message)
-
-    # Build context
-    prompt_context = "## Conversation summary:\n" + summary + "\n\n## Recent conversation:\n"
+    print(summary)
+    # Build prompt context
+    prompt_context = "##Conversation summary:\n" + summary + "\n\n##Recent conversation:\n"
+    token_count = 0
     for entry in recent_messages:
-        if len(entry['response']) > 10000:
+        tokens = len(entry['message'])
+        if len(entry['response']) > 800:
+            token_count += tokens
             prompt_context += f"User: {entry['message']}\nAssistant: Generated Image\n"
-        else:
-            prompt_context += f"User: {entry['message']}\nAssistant: {entry['response']}\n"
-
-    # Store in cache
-    context_cache.append({"message": message, "context": prompt_context})
-
+            continue
+        token_count += tokens + len(entry['response'])
+        if token_count > token_limit:
+            break
+        prompt_context += f"User: {entry['message']}\nAssistant: {entry['response']}\n"
     return prompt_context
-
-
-
 
 def summarize_history_TtI(messages, message):
     if not messages:
@@ -241,7 +208,7 @@ def build_text_to_image_context(history, message, current_embedding, recent_coun
     for msg in history:
         # Compute semantic similarity for the message
         try:
-            hist_embedding = json.loads(msg["embeddings"])["data"]
+            hist_embedding = get_embedding(msg['message'])
             sim = cosine_similarity(current_embedding, hist_embedding)
         except Exception as e:
             print("Error computing history embedding:", e)
