@@ -9,12 +9,20 @@ import requests
 import os
 from llm_inferences import query_llama_3_2_1b
 from dateutil import parser
-from sentence_transformers import SentenceTransformer
-
-embeddings_model = SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2')
 
 def get_embedding(text):
-    embedding_data = embeddings_model.encode(text) 
+    hf_api_key = os.getenv('HUGGINGFACE_API_KEY')
+    model = "sentence-transformers/all-MiniLM-L6-v2"
+    endpoint = f"https://api-inference.huggingface.co/pipeline/feature-extraction/{model}"
+    embed_headers = {
+        "Authorization": f"Bearer {hf_api_key}",
+        "Content-Type": "application/json"
+    }
+    payload = {"inputs": text}
+    response = requests.post(endpoint, headers=embed_headers, json=payload)
+    if response.status_code != 200:
+        raise Exception("Embedding API error: " + response.text)
+    embedding_data = response.json()
     
     if isinstance(embedding_data, list) and isinstance(embedding_data[0], list):
         embedding = [sum(x)/len(embedding_data) for x in zip(*embedding_data)]
