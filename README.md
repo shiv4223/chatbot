@@ -45,19 +45,27 @@ Architecture Link: https://www.figma.com/design/z3aN66C4rR3CpOSgkXsBAK/chatbot-a
    - __Specialized Functions:__ Invokes specific inference functions (e.g., for translation, coding, text-to-image) to match the task requirements.
    - __Mode-Driven:__ Ensures that model selection aligns with the processing mode, whether it be general chat, specialized research, or other domains.
 
-4. ### Mode procoessing: Prompt Customization: Formats the input message according to the selected mode (e.g., Translation, Coding, Summarizing) using dedicated prompt templates.
-Context Augmentation: Adjusts the context processing logic based on mode, handling additional data types like images or voice when necessary.
-Instruction Guidance: Provides clear instructions to the LLM by tailoring prompts that specify the expected output style and content.
+4. ### Mode procoessing:
+   - __Prompt Customization:__ Formats the input message according to the selected mode (e.g., Translation, Coding, Summarizing, etc.) using dedicated prompt templates.
+   - __Context Augmentation:__ Adjusts the context processing logic based on mode, handling additional data types like images or voice when necessary.
+   - __Instruction Guidance:__ Provides clear instructions to the LLM by creating prompts that specify the expected output style and content.
 
-5. ### Prompts: redefined Templates: Uses a suite of prompt templates (such as prompt_translation, prompt_coding, etc.) to guide the LLM’s responses.
-Enhanced Instructions: Constructs detailed prompts—like in the best_quality function—that integrate retrieved knowledge, reasoning, and conversation history.
-Task-Specific Detailing: Ensures each prompt is fine-tuned to the conversation’s context and the specific task at hand.
+5. ### Prompts: redefined Templates:
+   - Uses a created prompt templates (such as prompt_translation, prompt_coding, etc.) to guide the LLM’s responses.
+   - Enhanced Instructions: Constructs detailed prompts like in the Best Quality Mode function—that integrate retrieved knowledge, reasoning, and conversation history.
+   - Task-Specific Detailing: Ensures each prompt is fine-tuned to the conversation’s context and the specific task at hand.
 
-6. ### RAG Support: Knowledge Base Integration: Leverages Chroma DB to retrieve external information relevant to the current query.
-Combined Context: Merges the retrieved knowledge, conversation history, and dynamic reasoning into a single prompt for richer responses.
-Enhanced Response Quality: Uses external data to augment the LLM’s generation capabilities, producing more informed and contextually accurate answers.
+6. ### RAG Support: Knowledge Base Integration:
+   - Leverages Chroma DB to retrieve external information relevant to the current query.
+   - Combined Context: Merges the retrieved knowledge, conversation history, and dynamic reasoning into a single prompt for richer responses.
+   - Enhanced Response Quality: Uses external data to augment the LLM’s generation capabilities, producing more informed and contextually accurate answers.
+
+## Deployment Instructions: 
 
 
-Ref: https://arxiv.org/abs/2406.00025
+
+### References: 
+1. Caching: https://arxiv.org/abs/2406.00025
+2. 
 
 
