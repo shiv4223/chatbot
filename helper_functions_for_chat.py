@@ -73,7 +73,7 @@ def no_model_selection(mode):
         "WebSearch": "Meta Llama 3.1 8B",
         "Reasoning and Research": "Deepseek Chat",
         "Text to Image": "Black Forest Flux Schnell",
-        "Best Quality": "Mixtral Chat"
+        "Best Quality": "Deepseek R1 zero"
     }
     return mode_dic.get(mode, "Llama 3.2 1B")
 
@@ -122,7 +122,7 @@ def best_quality(prompt, model_name):
         '''
     else:
         prompt = f'''You are chatbot which has vast knowledge of every field. You will be provided with New Message (that is user query), Conversation History and Knowledge base. 
-        Your task is generate State of Art response for the New Message considering Conversation history if relevant to the New Message. You must use Knowledge base if relevant to the New Message to make your response more informative.   
+        Your task is generate State of Art response for the New Message considering Conversation history if relevant to the New Message. You must use Knowledge base to the New Message to make your response more informative. Only use Knowledge base and Conversation History if they are relevant to New Message. Also you just need to answer the New Message.
         
         {message}
 

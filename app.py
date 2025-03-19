@@ -61,7 +61,7 @@ def store_at_database(user_id, conversation_id, message, llm_response, mode, ima
     if not chat_res.data:
         print("Error saving chat:", chat_res)
 
-    return jsonify({"response": llm_response, "conversation_id": conversation_id})
+    return jsonify({"response": llm_response, "conversation_id": conversation_id, "reasoning": reasoning})
     
 
 @app.route('/register', methods=['POST'])
@@ -260,6 +260,7 @@ def chat_handler():
     ## Mode processing:
     prompt = process_mode(mode, message, source_lang, target_lang)
 
+    reasoning = None
     if mode == "Best Quality":
         prompt = best_quality(prompt, model_name)
         reasoning = prompt[1]
@@ -269,7 +270,7 @@ def chat_handler():
     if model_name == "No Selection":
         model_name = no_model_selection(mode)
 
-
+    print(reasoning)
     llm_response = process_model(mode, model_name, prompt, source_lang, target_lang, image_data, voice_data)
     # Robust extraction of generated text
     # if isinstance(inference_result, list):
@@ -286,7 +287,6 @@ def chat_handler():
     #     llm_text = str(inference_result)
 
     # llm_response = llm_text.split("Assistant:")[-1].strip()
-    reasoning = None
     if model_name == "Deepseek R1 zero" or model_name == "Deepseek R1":
         reasoning = llm_response[1]
         llm_response = llm_response[0]
@@ -309,7 +309,8 @@ def chat_handler():
     if current_embedding:
         current_embedding = {"data": current_embedding}
         current_embedding = json.dumps(current_embedding, indent=1)
-    
+
+    print(reasoning)
     return store_at_database(user_id, conversation_id, initial_message, llm_response, mode, image_data, current_embedding, reasoning)
 
     
