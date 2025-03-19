@@ -6,7 +6,7 @@ import numpy as np
 from datetime import datetime
 from flask import jsonify
 
-from wikipedia_data_extraction import collection
+# from wikipedia_data_extraction import collection
 
 from llm_inferences import (
     query_meta_llama_vision_openrouter,
@@ -93,17 +93,18 @@ def get_context_mode(mode):
 
 def best_quality(prompt, model_name):
     message, prompt = prompt[0],prompt[1]
-    retrieved_results = collection.query(
-        query_texts=[message],
-        n_results=1
-    )
+    # retrieved_results = collection.query(
+    #     query_texts=[message],
+    #     n_results=1
+    # )
 
-    documents = retrieved_results["documents"][0]
+    # documents = retrieved_results["documents"][0]
+    # doc_text = ""
+    # for doc in documents:
+    #     doc_text += doc
+
+    # print(doc_text)
     doc_text = ""
-    for doc in documents:
-        doc_text += doc
-
-    print(doc_text)
     reasoning = None
     if model_name not in ["Deepseek R1",'Deepseek R1 zero']:
         reasoning = query_deepseek_r1_distill_qwen(prompt)
@@ -116,18 +117,12 @@ def best_quality(prompt, model_name):
 
         ##Reasoning:
         {reasoning}
-
-        ##Knowledge base:
-        {doc_text}
         '''
     else:
         prompt = f'''You are chatbot which has vast knowledge of every field. You will be provided with New Message (that is user query), Conversation History and Knowledge base. 
         Your task is generate State of Art response for the New Message considering Conversation history if relevant to the New Message. You must use Knowledge base to the New Message to make your response more informative. Only use Knowledge base and Conversation History if they are relevant to New Message. Also you just need to answer the New Message.
         
         {message}
-
-        ##Knowledge base:
-        {doc_text}
         '''
     return [prompt, reasoning]
 
