@@ -14,6 +14,7 @@ from dotenv import load_dotenv
 from flask_cors import CORS
 from image_url import upload_file_to_google_drive
 import redis
+from waitress import serve
 
 
 
@@ -313,7 +314,10 @@ def chat_handler():
     print(reasoning)
     return store_at_database(user_id, conversation_id, initial_message, llm_response, mode, image_data, current_embedding, reasoning)
 
-    
+@app.route("/")
+def home():
+    return "🚀 Flask App is Running on Railway!"
 
 if __name__ == '__main__':
-    app.run()
+
+    serve(app, host="0.0.0.0", port=5000)
