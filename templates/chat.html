@@ -764,7 +764,7 @@ function escapeHtml(text) {
         return;
       }
       try {
-        const res = await fetch(`http://127.0.0.1:5000/conversations/${userId}`);
+        const res = await fetch(`https://chatbot-production-b7ee.up.railway.app/conversations/${userId}`);
         const data = await res.json();
         console.log("Conversations:", data);
         const conversationList = document.getElementById("conversation-list");
@@ -785,7 +785,7 @@ function escapeHtml(text) {
     // Load conversation messages and format them using formatResponse()
     async function loadConversation(conversationId) {
     try {
-        const res = await fetch(`http://127.0.0.1:5000/conversation/${conversationId}`);
+        const res = await fetch(`https://chatbot-production-b7ee.up.railway.app/conversation/${conversationId}`);
         const data = await res.json();
         console.log("Conversation messages:", data);
         currentConversationId = conversationId;
@@ -1117,7 +1117,7 @@ function createReasoningSection(reasoningText) {
     const timeoutPromise = new Promise((_, reject) =>
       setTimeout(() => reject(new Error("Server Error: No response from server.")), 300000)
     );
-    const fetchPromise = fetch("http://127.0.0.1:5000/chat", {
+    const fetchPromise = fetch("https://chatbot-production-b7ee.up.railway.app/chat", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload)
