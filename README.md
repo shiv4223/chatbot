@@ -62,11 +62,47 @@ Chat bot with multiple models, multiple-modes, multi-modal, context management, 
    - Enhanced Response Quality: Uses external data to augment the LLM’s generation capabilities, producing more informed and contextually accurate answers.
 
 ## Deployment Instructions: 
+### Prerequisites: 
+1. Clone this Repo
+2. Railway account for flask app deployment. 
+3. Supabase, Redis, Groq, Hugging Face, OpenRouter, and Cloudflare API keys.
 
+### Set Up Railway Project
+1. Go to Railway and log in.
+2. Click New Project -> Deploy from GitHub Repo.
+3. Select your GitHub repository and Railway will pull the code.
 
+### Set Environment Variables
+After Railway imports your project:
+1. Go to Project Settings → Environment Variables.
+2. Add these environment variables:
+3. Variable	Description
+   - HUGGINGFACE_API_KEY: HuggingFace API Key
+   - SUPABASE_URL: Supabase Project URL
+   - SUPABASE_KEY: Supabase API Key
+   - REDIS_URL: Redis Connection URL
+   - OPENROUTER_API_KEY: Open Router API Key 
+   - GROQ_API_KEY: GROQ API Key 
+   - CLOUDFLARE_ACCOUNT_ID: CloudFlare Account ID 
+   - CLOUDFLARE_AUTH_TOKEN: CloudFlare API Key
+   - FLASK_ENV: production
+   - PORT:	5000
 
-### References: 
-1. Caching: https://arxiv.org/abs/2406.00025
-2. 
+4. You can get these credentials from:
+   - Supabase: https://supabase.com/docs/guides/api
+   - Redis: [Railway Redis Plugin](https://redis.io/docs/latest/develop/clients/nodejs/connect/)
+   - Groq: [Groq API](https://console.groq.com/docs/quickstart)
+   - Cloudflare: [Cloudflare Workers](https://developers.cloudflare.com/fundamentals/)
+   - Hugging Face: [Hugging Face Tokens](https://www.geeksforgeeks.org/how-to-access-huggingface-api-key/)
+   - OpenRouter: [Open Router API](https://www.kerlig.com/help/open-router/get-api-key)
+
+5. __Instructions:__ In Templates, the front-end HTML files are available, before deploying the front-end, change: (http://127.0.0.1:5000) to (deployed flask-app URL).
+
+### Deploy Front-end:
+   - Go to your CloudFlare Dashboard.
+   - Navigate to Workers & Pages
+   - Click on Create.
+   - Select Pages
+   - Download the templates folder from the Github repo and upload that here.
 
 
