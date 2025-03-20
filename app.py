@@ -216,7 +216,7 @@ def chat_handler():
     ##Finding in Cache for match: 
     try:
         current_embedding = get_embedding(message)
-        current_embedding = current_embedding.tolist()
+        # current_embedding = current_embedding.tolist()
     except Exception as e:
         print("Embedding error:", e)
         current_embedding = None
@@ -245,7 +245,7 @@ def chat_handler():
     elif mode == "Text to Image":
         try:
             current_embedding = get_embedding(message)
-            current_embedding = current_embedding.tolist()
+            # current_embedding = current_embedding.tolist()
         except Exception as e:
             print("Embedding error:", e)
             current_embedding = None
