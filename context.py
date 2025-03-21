@@ -5,7 +5,6 @@ from datetime import datetime
 from llm_inferences import query_llama_3_2_1b
 import json
 
-# Endpoints and API keys
 
 
 def get_embedding(text):
@@ -80,7 +79,6 @@ def select_relevant_history(history, current_embedding, threshold = 0.5, max_tok
     scored_messages = []
     now = datetime.now()
     for msg in history:
-        # Compute semantic similarity for the message
         try:
 
             hist_embedding = msg["embeddings"]
@@ -91,7 +89,6 @@ def select_relevant_history(history, current_embedding, threshold = 0.5, max_tok
             print("Error computing history embedding:", e)
             sim = 0.0
 
-        # Compute recency factor using the created_at timestamp
         created_at = msg.get('created_at')
         try:
             dt = datetime.fromisoformat(created_at)
@@ -106,11 +103,9 @@ def select_relevant_history(history, current_embedding, threshold = 0.5, max_tok
 
     scored_messages.sort(key=lambda x: x[0], reverse=True)
     
-    # Select messages until reaching max_tokens
     selected = []
     token_count = 0
     for score, msg in scored_messages:
-        ## Come back here to check
         print(score, msg["message"])
         if score < threshold:
             break
@@ -151,14 +146,11 @@ def build_summary_context(history, message, recent_count=3, token_limit=500):
             prompt_context += f"User: {entry['message']}\nAssistant: {entry['response']}\n"
         return prompt_context
 
-    # Split history into older messages and recent messages
     older_messages = history[:-recent_count]
     recent_messages = history[-recent_count:]
     
-    # Get summary of older messages
     summary = summarize_history(older_messages, message)
     print(summary)
-    # Build prompt context
     prompt_context = "##Conversation summary:\n" + summary + "\n\n##Recent conversation:\n"
     token_count = 0
     for entry in recent_messages:
@@ -206,7 +198,7 @@ def build_text_to_image_context(history, message, current_embedding, recent_coun
     scored_messages = []
     now = datetime.now()
     for msg in history:
-        # Compute semantic similarity for the message
+        # Compute semantic similarity
         try:
             hist_embedding = get_embedding(msg['message'])
             sim = cosine_similarity(current_embedding, hist_embedding)
@@ -214,7 +206,7 @@ def build_text_to_image_context(history, message, current_embedding, recent_coun
             print("Error computing history embedding:", e)
             sim = 0.0
 
-        # Compute recency factor using the created_at timestamp
+        # Compute recency factor
         created_at = msg.get('created_at')
         try:
             dt = datetime.fromisoformat(created_at)
@@ -229,7 +221,6 @@ def build_text_to_image_context(history, message, current_embedding, recent_coun
 
     scored_messages.sort(key=lambda x: x[0], reverse=True)
     
-    # Select messages until reaching max_tokens
     selected = []
     token_count = 0
     for score, msg in scored_messages:
@@ -255,7 +246,7 @@ def truncate_history(history, max_tokens=500):
     truncated = []
     token_count = 0
     for msg in reversed(history):
-        token_count += len(msg['message'].split())  # Approximate token count
+        token_count += len(msg['message'].split()) 
         if token_count > max_tokens:
             break
         truncated.insert(0, msg)
