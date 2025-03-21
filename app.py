@@ -33,12 +33,10 @@ from context import (
     cosine_similarity
 )
 
-# Initialize Flask app and environment variables
 app = Flask(__name__)
 CORS(app, origins=["*"], methods=["POST", "GET"], allow_headers=["*"])
 load_dotenv()
 
-# Initialize Supabase and Redis clients
 supabase = create_client(os.getenv('SUPABASE_URL'), os.getenv('SUPABASE_KEY'))
 
 redis_client = redis.Redis.from_url(os.getenv('REDIS_URL'))
@@ -316,7 +314,7 @@ def chat_handler():
 
 @app.route("/")
 def home():
-    return "🚀 Flask App is Running on Railway!"
+    return 'Flask App is Running on Railway!"
 
 if __name__ == '__main__':
 
