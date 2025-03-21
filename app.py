@@ -314,7 +314,7 @@ def chat_handler():
 
 @app.route("/")
 def home():
-    return 'Flask App is Running on Railway!"
+    return "Flask App is Running on Railway!"
 
 if __name__ == '__main__':
 
